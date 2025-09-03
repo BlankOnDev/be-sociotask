@@ -1,0 +1,41 @@
+# Git ignore for be-socialtask (Go project)
+
+# Binaries for programs and plugins
+/bin/
+/dist/
+/build/
+
+# Output of the go coverage tool
+coverage.out
+
+# Dependency directories
+/vendor/
+
+# Go build outputs
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Environment files (do not commit secrets)
+.env
+
+# IDE / editor directories and files
+.vscode/
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+tmp/
+
+# Misc
+node_modules/
