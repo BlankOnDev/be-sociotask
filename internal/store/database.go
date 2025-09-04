@@ -55,7 +55,6 @@ func Migrate(db *sql.DB, dir string) error {
 		return fmt.Errorf("goose up: %w", err)
 	}
 	return nil
-
 }
 
 func GetEnv(key string) string {

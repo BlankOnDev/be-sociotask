@@ -7,13 +7,15 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/harundarat/be-socialtask/internal/api"
 	"github.com/harundarat/be-socialtask/internal/store"
 	"github.com/harundarat/be-socialtask/migrations"
 )
 
 type Application struct {
-	Logger *log.Logger
-	DB     *sql.DB
+	Logger      *log.Logger
+	TaskHandler *api.TaskHandler
+	DB          *sql.DB
 }
 
 func NewApplication() (*Application, error) {
@@ -29,9 +31,16 @@ func NewApplication() (*Application, error) {
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
+	// stores
+	taskStore := store.NewPostgresTaskStore(pgDB)
+
+	// handlers
+	taskHandler := api.NewTaskHandler(taskStore, logger)
+
 	app := &Application{
-		Logger: logger,
-		DB:     pgDB,
+		Logger:      logger,
+		TaskHandler: taskHandler,
+		DB:          pgDB,
 	}
 
 	return app, nil
