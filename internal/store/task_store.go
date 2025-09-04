@@ -3,9 +3,10 @@ package store
 import "database/sql"
 
 type Task struct {
-	ID          int    `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	ID          int     `json:"id"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	RewardUSDT  float64 `json:"reward_usdt"`
 }
 
 type PostgresTaskStore struct {
@@ -29,12 +30,12 @@ func (pg *PostgresTaskStore) CreateTask(task *Task) (*Task, error) {
 	defer tx.Rollback()
 
 	query := `
-		INSERT INTO tasks (title, description)
-		VALUES ($1, $2)
+		INSERT INTO tasks (title, description, reward_usdt)
+		VALUES ($1, $2, $3)
 		RETURNING id
 	`
 
-	err = tx.QueryRow(query, task.Title, task.Description).Scan(&task.ID)
+	err = tx.QueryRow(query, task.Title, task.Description, task.RewardUSDT).Scan(&task.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -57,11 +58,11 @@ func (pg *PostgresTaskStore) GetTaskByID(id int64) (*Task, error) {
 	defer tx.Rollback()
 
 	query := `
-		SELECT id, title, description
+		SELECT id, title, description, reward_usdt
 		FROM tasks
 		WHERE id = $1
 	`
-	err = tx.QueryRow(query, id).Scan(&task.ID, &task.Title, &task.Description)
+	err = tx.QueryRow(query, id).Scan(&task.ID, &task.Title, &task.Description, &task.RewardUSDT)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}

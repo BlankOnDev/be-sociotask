@@ -9,8 +9,8 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Get("/health", app.HealthCheck)
-	r.Get("/task/{id}", app.TaskHandler.HandleGetTaskByID)
-	r.Post("/task", app.TaskHandler.HandleCreateTask)
+	r.Get("/tasks/{id}", app.TaskHandler.HandleGetTaskByID)
+	r.Post("/tasks", app.TaskHandler.HandleCreateTask)
 
 	return r
 }
