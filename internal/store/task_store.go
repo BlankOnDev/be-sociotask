@@ -18,6 +18,7 @@ func NewPostgresTaskStore(db *sql.DB) *PostgresTaskStore {
 
 type TaskStore interface {
 	CreateTask(task *Task) (*Task, error)
+	GetTaskByID(id int64) (*Task, error)
 }
 
 func (pg *PostgresTaskStore) CreateTask(task *Task) (*Task, error) {
@@ -39,6 +40,31 @@ func (pg *PostgresTaskStore) CreateTask(task *Task) (*Task, error) {
 	}
 
 	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return task, nil
+}
+
+func (pg *PostgresTaskStore) GetTaskByID(id int64) (*Task, error) {
+	task := &Task{}
+
+	tx, err := pg.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	query := `
+		SELECT id, title, description
+		FROM tasks
+		WHERE id = $1
+	`
+	err = tx.QueryRow(query, id).Scan(&task.ID, &task.Title, &task.Description)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
