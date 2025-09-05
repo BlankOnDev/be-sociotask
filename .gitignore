@@ -39,3 +39,6 @@ tmp/
 
 # Misc
 node_modules/
+
+# Local Databases
+database/

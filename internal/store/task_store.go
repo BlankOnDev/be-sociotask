@@ -1,11 +1,15 @@
 package store
 
-import "database/sql"
+import (
+	"database/sql"
+	"errors"
+)
 
 type Task struct {
 	ID          int     `json:"id"`
 	Title       string  `json:"title"`
 	Description string  `json:"description"`
+	UserID      int64   `json:"user_id"`
 	RewardUSDT  float64 `json:"reward_usdt"`
 }
 
@@ -30,12 +34,15 @@ func (pg *PostgresTaskStore) CreateTask(task *Task) (*Task, error) {
 	defer tx.Rollback()
 
 	query := `
-		INSERT INTO tasks (title, description, reward_usdt)
-		VALUES ($1, $2, $3)
+		INSERT INTO tasks (title, description, user_id, reward_usdt)
+		VALUES ($1, $2, $3, $4)
 		RETURNING id
 	`
 
-	err = tx.QueryRow(query, task.Title, task.Description, task.RewardUSDT).Scan(&task.ID)
+	err = tx.QueryRow(query, task.Title, task.Description, task.UserID, task.RewardUSDT).Scan(&task.ID)
+	if task.UserID == 0 {
+		return nil, errors.New("user id is required and can not be zero!")
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -58,11 +65,11 @@ func (pg *PostgresTaskStore) GetTaskByID(id int64) (*Task, error) {
 	defer tx.Rollback()
 
 	query := `
-		SELECT id, title, description, reward_usdt
+		SELECT id, title, description, user_id, reward_usdt
 		FROM tasks
 		WHERE id = $1
 	`
-	err = tx.QueryRow(query, id).Scan(&task.ID, &task.Title, &task.Description, &task.RewardUSDT)
+	err = tx.QueryRow(query, id).Scan(&task.ID, &task.Title, &task.Description, &task.UserID, &task.RewardUSDT)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
