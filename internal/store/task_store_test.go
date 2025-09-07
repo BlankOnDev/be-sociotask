@@ -78,3 +78,50 @@ func TestCreateTask(t *testing.T) {
 		})
 	}
 }
+
+func TestGetTaskByID(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	store := NewPostgresTaskStore(db)
+
+	initialTask, err := store.CreateTask(&Task{
+		Title:       "Test",
+		Description: "Test",
+		UserID:      1,
+		RewardUSDT:  1,
+	})
+	if err != nil {
+		panic("failed to add initial task for testing")
+	}
+
+	tests := []struct {
+		name    string
+		id      int64
+		wantErr bool
+	}{
+		{
+			name:    "valid id",
+			id:      int64(initialTask.ID),
+			wantErr: false,
+		},
+		{
+			name:    "non-existent id",
+			id:      99999, // This is random ID
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			task, err := store.GetTaskByID(tt.id)
+			if tt.wantErr {
+				assert.Equal(t, nil, err)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.id, int64(task.ID))
+		})
+	}
+}

@@ -42,3 +42,6 @@ node_modules/
 
 # Local Databases
 database/
+
+# ai-digest
+codebase.md
