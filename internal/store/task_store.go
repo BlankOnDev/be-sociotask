@@ -41,7 +41,7 @@ func (pg *PostgresTaskStore) CreateTask(task *Task) (*Task, error) {
 
 	err = tx.QueryRow(query, task.Title, task.Description, task.UserID, task.RewardUSDT).Scan(&task.ID)
 	if task.UserID == 0 {
-		return nil, errors.New("user id is required and can not be zero!")
+		return nil, errors.New("user id is required and can not be zero")
 	}
 	if err != nil {
 		return nil, err
