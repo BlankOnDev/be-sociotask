@@ -90,6 +90,66 @@ func TestCreateUser(t *testing.T) {
 	}
 }
 
+func TestGetUserByUsername(t *testing.T) {
+	db := setupTestDBUser(t)
+	defer db.Close()
+
+	store := NewPostgresUserStore(db)
+
+	initialUser := User{
+		Username: "test-exist",
+		Email:    "test-exist@gmail.com",
+		PasswordHash: password{
+			plainText: StrPtr("test-exist"),
+			hash:      []byte("test-exist"),
+		},
+		Bio: "test-exist",
+	}
+	err := store.CreateUser(&initialUser)
+	if err != nil {
+		t.Fatalf("create initial user error: %v", err)
+	}
+
+	tests := []struct {
+		name      string
+		username  string
+		wantErr   bool
+		userExist bool
+	}{
+		{
+			name:      "valid username",
+			username:  initialUser.Username,
+			wantErr:   false,
+			userExist: true,
+		},
+		{
+			name:      "username does not exist",
+			username:  "non-existing-user",
+			wantErr:   false,
+			userExist: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			retrievedUser, err := store.GetUserByUsername(tt.username)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+
+			if !tt.userExist {
+				require.NoError(t, err)
+				assert.Empty(t, retrievedUser)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.username, retrievedUser.Username)
+		})
+	}
+}
+
 func StrPtr(s string) *string {
 	return &s
 }
