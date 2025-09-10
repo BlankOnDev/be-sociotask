@@ -83,14 +83,14 @@ func TestCreateUser(t *testing.T) {
 			require.NoError(t, err)
 
 			// Check created user in the database
-			retrievedUser, err := store.GetUserByUsername(tt.user.Username)
+			retrievedUser, err := store.GetUserByEmail(tt.user.Email)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.user.Username, retrievedUser.Username)
+			assert.Equal(t, tt.user.Email, retrievedUser.Email)
 		})
 	}
 }
 
-func TestGetUserByUsername(t *testing.T) {
+func TestGetUserByEmail(t *testing.T) {
 	db := setupTestDBUser(t)
 	defer db.Close()
 
@@ -112,19 +112,19 @@ func TestGetUserByUsername(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		username  string
+		email     string
 		wantErr   bool
 		userExist bool
 	}{
 		{
 			name:      "valid username",
-			username:  initialUser.Username,
+			email:     initialUser.Email,
 			wantErr:   false,
 			userExist: true,
 		},
 		{
 			name:      "username does not exist",
-			username:  "non-existing-user",
+			email:     "non-existing-user@email.com",
 			wantErr:   false,
 			userExist: false,
 		},
@@ -132,7 +132,7 @@ func TestGetUserByUsername(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			retrievedUser, err := store.GetUserByUsername(tt.username)
+			retrievedUser, err := store.GetUserByEmail(tt.email)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -145,7 +145,7 @@ func TestGetUserByUsername(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.username, retrievedUser.Username)
+			assert.Equal(t, tt.email, retrievedUser.Email)
 		})
 	}
 }

@@ -60,7 +60,7 @@ func NewPostgresUserStore(db *sql.DB) *PostgresUserStore {
 
 type UserStore interface {
 	CreateUser(*User) error
-	GetUserByUsername(string) (*User, error)
+	GetUserByEmail(string) (*User, error)
 	UpdateUser(*User) error
 }
 
@@ -112,7 +112,7 @@ func (s *PostgresUserStore) UpdateUser(user *User) error {
 	return nil
 }
 
-func (s *PostgresUserStore) GetUserByUsername(username string) (*User, error) {
+func (s *PostgresUserStore) GetUserByEmail(email string) (*User, error) {
 	user := &User{
 		PasswordHash: password{},
 	}
@@ -127,10 +127,10 @@ func (s *PostgresUserStore) GetUserByUsername(username string) (*User, error) {
 			created_at, 
 			updated_at
 		FROM users
-		WHERE username = $1
+		WHERE email = $1
 	`
 
-	err := s.db.QueryRow(query, username).Scan(
+	err := s.db.QueryRow(query, email).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Email,

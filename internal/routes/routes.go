@@ -12,6 +12,7 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 	r.Get("/tasks/{id}", app.TaskHandler.HandleGetTaskByID)
 	r.Post("/tasks", app.TaskHandler.HandleCreateTask)
 	r.Post("/users", app.UserHandler.HandleCreateUser)
+	r.Post("/login", app.UserHandler.HandleLoginUser)
 
 	return r
 }
