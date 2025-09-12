@@ -8,15 +8,17 @@ import (
 	"os"
 
 	"github.com/harundarat/be-socialtask/internal/api"
+	"github.com/harundarat/be-socialtask/internal/middleware"
 	"github.com/harundarat/be-socialtask/internal/store"
 	"github.com/harundarat/be-socialtask/migrations"
 )
 
 type Application struct {
-	Logger      *log.Logger
-	TaskHandler *api.TaskHandler
-	UserHandler *api.UserHandler
-	DB          *sql.DB
+	Logger         *log.Logger
+	TaskHandler    *api.TaskHandler
+	UserHandler    *api.UserHandler
+	UserMiddleware *middleware.UserMiddleware
+	DB             *sql.DB
 }
 
 func NewApplication() (*Application, error) {
@@ -40,11 +42,15 @@ func NewApplication() (*Application, error) {
 	taskHandler := api.NewTaskHandler(taskStore, logger)
 	userHandler := api.NewUserHandler(userStore, logger)
 
+	// middleware
+	userMiddleware := middleware.NewUserMiddleware(userStore, "thisissecret")
+
 	app := &Application{
-		Logger:      logger,
-		TaskHandler: taskHandler,
-		UserHandler: userHandler,
-		DB:          pgDB,
+		Logger:         logger,
+		TaskHandler:    taskHandler,
+		UserHandler:    userHandler,
+		UserMiddleware: userMiddleware,
+		DB:             pgDB,
 	}
 
 	return app, nil

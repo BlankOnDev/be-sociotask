@@ -8,6 +8,10 @@ import (
 func SetupRoutes(app *app.Application) *chi.Mux {
 	r := chi.NewRouter()
 
+	r.Group(func(r chi.Router) {
+		r.Use(app.UserMiddleware.Authenticate)
+	})
+
 	r.Get("/health", app.HealthCheck)
 	r.Get("/tasks/{id}", app.TaskHandler.HandleGetTaskByID)
 	r.Post("/tasks", app.TaskHandler.HandleCreateTask)
