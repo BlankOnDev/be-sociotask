@@ -43,7 +43,7 @@ func TestCreateUser(t *testing.T) {
 		},
 		Bio: "test-exist",
 	}
-	err := store.CreateUser(&initialUser)
+	_, err := store.CreateUser(&initialUser)
 	if err != nil {
 		t.Fatalf("create initial user error: %v", err)
 	}
@@ -75,7 +75,7 @@ func TestCreateUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := store.CreateUser(tt.user)
+			_, err := store.CreateUser(tt.user)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -105,7 +105,7 @@ func TestGetUserByEmail(t *testing.T) {
 		},
 		Bio: "test-exist",
 	}
-	err := store.CreateUser(&initialUser)
+	_, err := store.CreateUser(&initialUser)
 	if err != nil {
 		t.Fatalf("create initial user error: %v", err)
 	}

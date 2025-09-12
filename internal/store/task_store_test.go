@@ -20,7 +20,7 @@ func setupTestDB(t *testing.T) *sql.DB {
 		t.Fatalf("migration test db error: %v", err)
 	}
 
-	_, err = db.Exec("TRUNCATE tasks CASCADE")
+	_, err = db.Exec("TRUNCATE tasks, users CASCADE")
 	if err != nil {
 		t.Fatalf("truncating table: %v", err)
 	}
@@ -36,15 +36,13 @@ func TestCreateTask(t *testing.T) {
 	userStore := NewPostgresUserStore(db)
 
 	initialUser := &User{
-		Username: "test-create-task2",
-		Email:    "test-create-task2@gmail.com",
-		Bio:      "test-create-task2",
+		Username: "test-create-task",
+		Email:    "test-create-task@gmail.com",
+		Bio:      "test-create-task",
 	}
 	initialUser.PasswordHash.Set("password123")
 
-	err := userStore.CreateUser(initialUser)
-	require.NoError(t, err)
-	initialUser, err = userStore.GetUserByEmail("test-create-task2@gmail.com")
+	initialUser, err := userStore.CreateUser(initialUser)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -101,12 +99,26 @@ func TestGetTaskByID(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
-	store := NewPostgresTaskStore(db)
+	taskStore := NewPostgresTaskStore(db)
+	userStore := NewPostgresUserStore(db)
 
-	initialTask, err := store.CreateTask(&Task{
+	// Create initial user for happy path
+	initialUser := &User{
+		Username: "test-get-task-by-id",
+		Email:    "test-get-task-by-id@gmail.com",
+		Bio:      "test-get-task-by-id",
+	}
+	initialUser.PasswordHash.Set("password123")
+	user, err := userStore.CreateUser(initialUser)
+	if err != nil {
+		t.Fatalf("failed to create initial user: %v", err)
+	}
+
+	// Create initial task for happy path
+	initialTask, err := taskStore.CreateTask(&Task{
 		Title:       "Test",
 		Description: "Test",
-		UserID:      1,
+		UserID:      user.ID,
 		RewardUSDT:  1,
 	})
 	if err != nil {
@@ -132,7 +144,7 @@ func TestGetTaskByID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			task, err := store.GetTaskByID(tt.id)
+			task, err := taskStore.GetTaskByID(tt.id)
 			if tt.wantErr {
 				assert.Equal(t, nil, err)
 				return

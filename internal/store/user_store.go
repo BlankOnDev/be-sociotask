@@ -65,13 +65,13 @@ func NewPostgresUserStore(db *sql.DB) *PostgresUserStore {
 }
 
 type UserStore interface {
-	CreateUser(*User) error
+	CreateUser(*User) (*User, error)
 	GetUserByEmail(string) (*User, error)
 	UpdateUser(*User) error
 	GetUserByID(int64) (*User, error)
 }
 
-func (s *PostgresUserStore) CreateUser(user *User) error {
+func (s *PostgresUserStore) CreateUser(user *User) (*User, error) {
 	query := `
 		INSERT INTO users (username, email, password_hash, bio)
 		VALUES ($1, $2, $3, $4)
@@ -86,10 +86,10 @@ func (s *PostgresUserStore) CreateUser(user *User) error {
 		user.Bio,
 	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return user, nil
 }
 
 func (s *PostgresUserStore) UpdateUser(user *User) error {

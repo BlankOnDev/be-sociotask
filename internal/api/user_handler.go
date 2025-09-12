@@ -106,7 +106,7 @@ func (uh *UserHandler) HandleCreateUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = uh.userStore.CreateUser(user)
+	user, err = uh.userStore.CreateUser(user)
 	if err != nil {
 		uh.logger.Printf("ERROR: creating user: %v", err)
 		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "internal server error"})
