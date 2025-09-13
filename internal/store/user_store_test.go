@@ -150,6 +150,81 @@ func TestGetUserByEmail(t *testing.T) {
 	}
 }
 
+func TestGetUserTasks(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	taskStore := NewPostgresTaskStore(db)
+	userStore := NewPostgresUserStore(db)
+
+	// Create initial user and tasks for happy path
+	initialUser := &User{
+		Username: "test",
+		Email:    "test@gmail.com",
+		Bio:      "test",
+	}
+	initialUser.PasswordHash.Set("password123")
+	initialUser, err := userStore.CreateUser(initialUser)
+	if err != nil {
+		t.Fatalf("failed to create initial user: %v", err)
+	}
+
+	initialTasks := []*Task{
+		{
+			Title:       "Test",
+			Description: "Test",
+			UserID:      initialUser.ID,
+			RewardUSDT:  1,
+		},
+		{
+			Title:       "Test",
+			Description: "Test",
+			UserID:      initialUser.ID,
+			RewardUSDT:  1,
+		},
+	}
+	for _, it := range initialTasks {
+		_, err := taskStore.CreateTask(it)
+		if err != nil {
+			t.Fatalf("failed to create initial task: %v", err)
+		}
+	}
+
+	tests := []struct {
+		name      string
+		userID    int64
+		userExist bool
+	}{
+		{
+			name:      "valid user ID",
+			userID:    initialUser.ID,
+			userExist: true,
+		},
+		{
+			name:      "non-existent user ID",
+			userID:    99999999,
+			userExist: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tasks, err := userStore.GetUserTasks(tt.userID)
+			if !tt.userExist {
+				assert.NoError(t, err)
+				assert.NotNil(t, tasks)
+				assert.Equal(t, 0, len(*tasks))
+				return
+			}
+
+			require.NoError(t, err)
+			require.NotNil(t, tasks)
+			assert.Equal(t, 2, len(*tasks))
+		})
+
+	}
+}
+
 func StrPtr(s string) *string {
 	return &s
 }

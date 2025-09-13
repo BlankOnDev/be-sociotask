@@ -3,14 +3,17 @@ package store
 import (
 	"database/sql"
 	"errors"
+	"time"
 )
 
 type Task struct {
-	ID          int     `json:"id"`
-	Title       string  `json:"title"`
-	Description string  `json:"description"`
-	UserID      int64   `json:"user_id"`
-	RewardUSDT  float64 `json:"reward_usdt"`
+	ID          int       `json:"id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	UserID      int64     `json:"user_id"`
+	RewardUSDT  float64   `json:"reward_usdt"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type PostgresTaskStore struct {

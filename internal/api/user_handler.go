@@ -162,3 +162,21 @@ func (uh *UserHandler) HandleLoginUser(w http.ResponseWriter, r *http.Request) {
 
 	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"token": token})
 }
+
+func (uh *UserHandler) HandleGetUserTasks(w http.ResponseWriter, r *http.Request) {
+	id, err := utils.ReadIDParam(r)
+	if err != nil {
+		uh.logger.Printf("ERROR: reading id param: %v", err)
+		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "invalid user id"})
+		return
+	}
+
+	tasks, err := uh.userStore.GetUserTasks(id)
+	if err != nil {
+		uh.logger.Printf("ERROR: getting user tasks: %v", err)
+		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "internal server error"})
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"tasks": tasks})
+}

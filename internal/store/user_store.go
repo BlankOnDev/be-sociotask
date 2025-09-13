@@ -69,6 +69,7 @@ type UserStore interface {
 	GetUserByEmail(string) (*User, error)
 	UpdateUser(*User) error
 	GetUserByID(int64) (*User, error)
+	GetUserTasks(userID int64) (*[]Task, error)
 }
 
 func (s *PostgresUserStore) CreateUser(user *User) (*User, error) {
@@ -191,4 +192,37 @@ func (s *PostgresUserStore) GetUserByID(id int64) (*User, error) {
 	}
 
 	return user, nil
+}
+
+func (s *PostgresUserStore) GetUserTasks(userID int64) (*[]Task, error) {
+	var tasks []Task
+
+	query := `
+	SELECT id, user_id, title, description, reward_usdt, created_at, updated_at
+	FROM tasks
+	WHERE user_id = $1
+	`
+
+	rows, err := s.db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var task Task
+		err := rows.Scan(&task.ID, &task.UserID, &task.Title, &task.Description, &task.RewardUSDT, &task.CreatedAt, &task.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, task)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return &tasks, nil
+
 }
