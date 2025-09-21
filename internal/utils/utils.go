@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"errors"
+	"math/big"
 	"net/http"
 	"strconv"
 
@@ -37,4 +39,20 @@ func ReadIDParam(r *http.Request) (int64, error) {
 	}
 
 	return id, nil
+}
+
+// GenerateRandomString creates a cryptographically secure random string of a given length.
+func GenerateRandomString(n int) string {
+	const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
+	ret := make([]byte, n)
+	for i := range n {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			// This panic is safe because rand.Int should not fail in a normal environment
+			panic(err)
+		}
+		ret[i] = letters[num.Int64()]
+	}
+
+	return string(ret)
 }
