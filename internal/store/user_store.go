@@ -39,13 +39,15 @@ func (p *password) Matches(plainTextPassword string) (bool, error) {
 }
 
 type User struct {
-	ID           int64     `json:"id"`
-	Username     string    `json:"username"`
-	Email        string    `json:"email"`
-	PasswordHash password  `json:"-"`
-	Bio          string    `json:"bio"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID            int64          `json:"id"`
+	Username      string         `json:"username"`
+	Email         string         `json:"email"`
+	PasswordHash  password       `json:"-"`
+	Bio           string         `json:"bio"`
+	WalletAddress sql.NullString `json:"wallet_address"`
+	XID           sql.NullString `json:"x_id"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
 }
 
 var AnonymousUser = &User{}
@@ -132,6 +134,7 @@ func (s *PostgresUserStore) GetUserByEmail(email string) (*User, error) {
 			email, 
 			password_hash, 
 			bio, 
+			wallet_address,
 			created_at, 
 			updated_at
 		FROM users
@@ -144,9 +147,13 @@ func (s *PostgresUserStore) GetUserByEmail(email string) (*User, error) {
 		&user.Email,
 		&user.PasswordHash.hash,
 		&user.Bio,
+		&user.WalletAddress,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -166,6 +173,7 @@ func (s *PostgresUserStore) GetUserByID(id int64) (*User, error) {
 			email,
 			password_hash,
 			bio,
+			wallet_address,
 			created_at,
 			updated_at
 		FROM users
@@ -178,6 +186,7 @@ func (s *PostgresUserStore) GetUserByID(id int64) (*User, error) {
 		&user.Email,
 		&user.PasswordHash.hash,
 		&user.Bio,
+		&user.WalletAddress,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
