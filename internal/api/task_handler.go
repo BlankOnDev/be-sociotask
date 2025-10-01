@@ -27,18 +27,18 @@ func (th *TaskHandler) HandleCreateTask(w http.ResponseWriter, r *http.Request) 
 	err := json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
 		th.logger.Printf("ERROR: decodingCreateTask: %v", err)
-		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "invalid request sent"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInvalidRequest, http.StatusBadRequest, nil, nil)
 		return
 	}
 
 	createdTask, err := th.taskStore.CreateTask(&task)
 	if err != nil {
 		th.logger.Printf("ERROR: createTask: %v", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "failed to create task"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, nil)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, utils.Envelope{"task": createdTask})
+	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageTaskCreated, http.StatusCreated, utils.Envelope{"task": createdTask}, nil)
 
 }
 
@@ -46,15 +46,16 @@ func (th *TaskHandler) HandleGetTaskByID(w http.ResponseWriter, r *http.Request)
 	id, err := utils.ReadIDParam(r)
 	if err != nil {
 		th.logger.Printf("ERROR: readIdParam: %v", err)
-		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "invalid workout id"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInvalidRequest, http.StatusBadRequest, nil, nil)
 		return
 	}
 
 	task, err := th.taskStore.GetTaskByID(id)
 	if err != nil {
 		th.logger.Printf("ERROR: getTaskByID: %v", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "failed to get task by id"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, nil)
+		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"task": task})
+	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageTaskRetrieved, http.StatusOK, utils.Envelope{"task": task}, nil)
 }

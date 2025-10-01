@@ -53,30 +53,30 @@ func (um *UserMiddleware) Authenticate(next http.Handler) http.Handler {
 
 		headerParts := strings.Split(authHeader, " ")
 		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-			utils.WriteJSON(w, http.StatusUnauthorized, utils.Envelope{"error": "invalid authorization header"})
+			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, nil, nil)
 			return
 		}
 
 		token := headerParts[1]
 		claims, err := auth.ParseJWTToken(token, um.jwtSecret)
 		if err != nil {
-			utils.WriteJSON(w, http.StatusUnauthorized, utils.Envelope{"error": "invalid or expired token"})
+			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, nil, nil)
 			return
 		}
 
 		userID, err := strconv.Atoi(claims.Subject)
 		if err != nil {
-			utils.WriteJSON(w, http.StatusUnauthorized, utils.Envelope{"error": "invalid user ID in token"})
+			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, nil, nil)
 			return
 		}
 
 		user, err := um.userStore.GetUserByID(int64(userID))
 		if err != nil {
-			utils.WriteJSON(w, http.StatusUnauthorized, utils.Envelope{"error": "user not found"})
+			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, nil, nil)
 			return
 		}
 		if user == nil {
-			utils.WriteJSON(w, http.StatusUnauthorized, utils.Envelope{"error": "user not found"})
+			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, nil, nil)
 			return
 		}
 
@@ -89,7 +89,7 @@ func (um *UserMiddleware) RequireUser(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := GetUser(r)
 		if user.IsAnonymous() {
-			utils.WriteJSON(w, http.StatusUnauthorized, utils.Envelope{"error": "you must be logged in to access this route"})
+			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, nil, nil)
 			return
 		}
 

@@ -81,13 +81,13 @@ func (uh *UserHandler) HandleCreateUser(w http.ResponseWriter, r *http.Request) 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		uh.logger.Printf("error decoding request body: %v", err)
-		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "invalid request payload"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInvalidRequest, http.StatusBadRequest, nil, nil)
 		return
 	}
 
 	err = uh.validateRegisterRequest(&req)
 	if err != nil {
-		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": err.Error()})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageValidationFailed, http.StatusBadRequest, nil, []string{err.Error()})
 		return
 	}
 
@@ -102,18 +102,18 @@ func (uh *UserHandler) HandleCreateUser(w http.ResponseWriter, r *http.Request) 
 	err = user.PasswordHash.Set(req.Password)
 	if err != nil {
 		uh.logger.Printf("ERROR: hashing password: %v", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "internal server error"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, nil)
 		return
 	}
 
 	user, err = uh.userStore.CreateUser(user)
 	if err != nil {
 		uh.logger.Printf("ERROR: creating user: %v", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "internal server error"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageRegisterFailed, http.StatusInternalServerError, nil, nil)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, utils.Envelope{"user": user})
+	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageRegisterSuccess, http.StatusCreated, utils.Envelope{"user": user}, nil)
 }
 
 func (uh *UserHandler) HandleLoginUser(w http.ResponseWriter, r *http.Request) {
@@ -122,61 +122,61 @@ func (uh *UserHandler) HandleLoginUser(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		uh.logger.Printf("error decoding request body: %v", err)
-		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "invalid request payload"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInvalidRequest, http.StatusBadRequest, nil, nil)
 		return
 	}
 	err = uh.validateLoginRequest(&req)
 	if err != nil {
-		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": err.Error()})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageValidationFailed, http.StatusBadRequest, nil, []string{err.Error()})
 		return
 	}
 
 	user, err := uh.userStore.GetUserByEmail(req.Email)
 	if err != nil {
 		uh.logger.Printf("ERROR: get user by email: %v", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "internal server error"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, nil)
 		return
 	}
 	if user == nil {
-		utils.WriteJSON(w, http.StatusNotFound, utils.Envelope{"error": "user not found"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageNotFound, http.StatusNotFound, nil, nil)
 		return
 	}
 
 	isMatches, err := user.PasswordHash.Matches(req.Password)
 	if err != nil {
 		uh.logger.Printf("ERROR: matching password: %v", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "internal server error"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, nil)
 		return
 	}
 	if !isMatches {
-		utils.WriteJSON(w, http.StatusUnauthorized, utils.Envelope{"error": "invalid credentials"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInvalidCredentials, http.StatusUnauthorized, nil, nil)
 		return
 	}
 
 	token, err := auth.GenerateJWTToken(user.ID, auth.RoleUser, "thisissecret")
 	if err != nil {
 		uh.logger.Printf("ERROR: generating token: %v", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "internal server error"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, nil)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"token": token})
+	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageLoginSuccess, http.StatusOK, utils.Envelope{"token": token}, nil)
 }
 
 func (uh *UserHandler) HandleGetUserTasks(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.ReadIDParam(r)
 	if err != nil {
 		uh.logger.Printf("ERROR: reading id param: %v", err)
-		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "invalid user id"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInvalidRequest, http.StatusBadRequest, nil, nil)
 		return
 	}
 
 	tasks, err := uh.userStore.GetUserTasks(id)
 	if err != nil {
 		uh.logger.Printf("ERROR: getting user tasks: %v", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "internal server error"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, nil)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"tasks": tasks})
+	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageTasksFetched, http.StatusOK, utils.Envelope{"tasks": tasks}, nil)
 }
