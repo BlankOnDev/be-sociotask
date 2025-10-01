@@ -3,14 +3,22 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/harundarat/be-socialtask/internal/app"
 	"github.com/harundarat/be-socialtask/internal/routes"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// load env, ngga kedetek
+	err := godotenv.Load()
+	if err != nil {
+		log.Panicf("error load file env")
+	}
+
 	var port int
 	flag.IntVar(&port, "port", 8080, "Go backend server port")
 

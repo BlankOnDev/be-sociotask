@@ -1,12 +1,30 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/harundarat/be-socialtask/internal/app"
+	"github.com/harundarat/be-socialtask/internal/pages"
 )
 
 func SetupRoutes(app *app.Application) *chi.Mux {
 	r := chi.NewRouter()
+
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write([]byte(pages.IndexPage))
+	})
+
+	r.Get("/success", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write([]byte(pages.SuccessPage))
+	})
+
+	r.Get("/failed", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write([]byte(pages.FailedPage))
+	})
 
 	r.Group(func(r chi.Router) {
 		r.Use(app.UserMiddleware.Authenticate)
@@ -20,6 +38,8 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 	r.Post("/tasks", app.TaskHandler.HandleCreateTask)
 	r.Post("/users", app.UserHandler.HandleCreateUser)
 	r.Post("/login", app.UserHandler.HandleLoginUser)
+	r.Get("/google-login", app.UserHandler.LoginAuthenticationGooogle)
+	r.Get("/callback", app.UserHandler.CallbackAuthenticationGooogle)
 
 	return r
 }

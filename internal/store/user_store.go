@@ -2,8 +2,11 @@ package store
 
 import (
 	"database/sql"
+	"fmt"
+	"math/rand"
 	"time"
 
+	"github.com/harundarat/be-socialtask/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -72,6 +75,7 @@ type UserStore interface {
 	UpdateUser(*User) error
 	GetUserByID(int64) (*User, error)
 	GetUserTasks(userID int64) (*[]Task, error)
+	FindEmailForGoogle(userID, email, username string) (*User, error)
 }
 
 func (s *PostgresUserStore) CreateUser(user *User) (*User, error) {
@@ -231,4 +235,45 @@ func (s *PostgresUserStore) GetUserTasks(userID int64) (*[]Task, error) {
 
 	return &tasks, nil
 
+}
+
+func (s *PostgresUserStore) FindEmailForGoogle(userID, email, username string) (*User, error) {
+	query := `SELECT id, username, email FROM users WHERE email = $1`
+	var u User
+	err := s.db.QueryRow(query, email).
+		Scan(
+			&u.ID,
+			&u.Username,
+			&u.Email,
+		)
+	// error handle, generate akun baru. tidak error tgl login
+	if err != nil {
+		if err == sql.ErrNoRows {
+			passwordDUmmy, err := utils.GenerateSecureRandomString(32)
+			if err != nil {
+				return nil, fmt.Errorf("failed rand password int: %w", err)
+			}
+
+			source := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
+			randomNumber := source.Intn(10000)
+			newUsername := fmt.Sprintf("%s_Google_%04d", username, randomNumber)
+
+			insertQuery := `
+                INSERT INTO users (username, email, password_hash) 
+                VALUES ($1, $2, $3) 
+                RETURNING id, username, email`
+
+			var newUser User
+			err = s.db.QueryRow(insertQuery, newUsername, email, passwordDUmmy).Scan(
+				&newUser.ID, &newUser.Username, &newUser.Email,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("error create user: %w", err)
+			}
+			return &newUser, nil
+		}
+		return nil, fmt.Errorf("error find user: %w", err)
+	}
+
+	return &u, nil
 }

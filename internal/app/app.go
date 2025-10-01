@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/harundarat/be-socialtask/internal/api"
+	auth "github.com/harundarat/be-socialtask/internal/auth/google"
 	"github.com/harundarat/be-socialtask/internal/middleware"
 	"github.com/harundarat/be-socialtask/internal/store"
 	"github.com/harundarat/be-socialtask/migrations"
@@ -21,6 +22,7 @@ type Application struct {
 	AuthHandler    *api.AuthHandler
 	UserMiddleware *middleware.UserMiddleware
 	DB             *sql.DB
+	GoogleApp      *oauth2.Config
 }
 
 func NewApplication() (*Application, error) {
@@ -47,13 +49,15 @@ func NewApplication() (*Application, error) {
 		},
 	}
 
+	oauthConfGl := auth.NewGoogleAuth()
+
 	// stores
 	taskStore := store.NewPostgresTaskStore(pgDB)
 	userStore := store.NewPostgresUserStore(pgDB)
 
 	// handlers
 	taskHandler := api.NewTaskHandler(taskStore, logger)
-	userHandler := api.NewUserHandler(userStore, logger)
+	userHandler := api.NewUserHandler(userStore, oauthConfGl, logger)
 	authHandler := api.NewAuthHandler(logger, userStore, oauthConf)
 
 	// middleware
@@ -66,6 +70,7 @@ func NewApplication() (*Application, error) {
 		AuthHandler:    authHandler,
 		UserMiddleware: userMiddleware,
 		DB:             pgDB,
+		GoogleApp:      oauthConfGl,
 	}
 
 	return app, nil
