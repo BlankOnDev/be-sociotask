@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"log"
@@ -13,10 +14,10 @@ import (
 )
 
 type registerUserRequest struct {
+	Fullname string `json:"fullname"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	Bio      string `json:"bio"`
 }
 
 type loginUserRequest struct {
@@ -37,6 +38,12 @@ func NewUserHandler(userStore store.UserStore, logger *log.Logger) *UserHandler 
 }
 
 func (h *UserHandler) validateRegisterRequest(req *registerUserRequest) error {
+	if req.Fullname == "" {
+		return errors.New("fullname is required")
+	}
+	if len(req.Fullname) > 255 {
+		return errors.New("fullname must be less than 255 characters")
+	}
 	if req.Username == "" {
 		return errors.New("username is required")
 	}
@@ -94,9 +101,10 @@ func (uh *UserHandler) HandleCreateUser(w http.ResponseWriter, r *http.Request) 
 	user := &store.User{
 		Username: req.Username,
 		Email:    req.Email,
-	}
-	if req.Bio != "" {
-		user.Bio = req.Bio
+		Fullname: sql.NullString{
+			String: req.Fullname,
+			Valid:  true,
+		},
 	}
 
 	err = user.PasswordHash.Set(req.Password)
@@ -113,7 +121,7 @@ func (uh *UserHandler) HandleCreateUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageRegisterSuccess, http.StatusCreated, utils.Envelope{"user": user}, nil)
+	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageRegisterSuccess, http.StatusCreated, utils.Envelope{"user_id": user.ID}, nil)
 }
 
 func (uh *UserHandler) HandleLoginUser(w http.ResponseWriter, r *http.Request) {

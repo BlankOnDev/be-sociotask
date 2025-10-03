@@ -41,7 +41,10 @@ func TestCreateUser(t *testing.T) {
 			plainText: StrPtr("test-exist"),
 			hash:      []byte("test-exist"),
 		},
-		Bio: "test-exist",
+		Fullname: sql.NullString{
+			String: "Test Exist User",
+			Valid:  true,
+		},
 	}
 	_, err := store.CreateUser(&initialUser)
 	if err != nil {
@@ -62,7 +65,10 @@ func TestCreateUser(t *testing.T) {
 					plainText: StrPtr("test"),
 					hash:      []byte("test"),
 				},
-				Bio: "test",
+				Fullname: sql.NullString{
+					String: "Test User",
+					Valid:  true,
+				},
 			},
 			wantErr: false,
 		},
@@ -103,7 +109,10 @@ func TestGetUserByEmail(t *testing.T) {
 			plainText: StrPtr("test-exist"),
 			hash:      []byte("test-exist"),
 		},
-		Bio: "test-exist",
+		Fullname: sql.NullString{
+			String: "Test Exist User",
+			Valid:  true,
+		},
 	}
 	_, err := store.CreateUser(&initialUser)
 	if err != nil {
@@ -161,7 +170,10 @@ func TestGetUserTasks(t *testing.T) {
 	initialUser := &User{
 		Username: "test",
 		Email:    "test@gmail.com",
-		Bio:      "test",
+		Fullname: sql.NullString{
+			String: "Test User",
+			Valid:  true,
+		},
 	}
 	initialUser.PasswordHash.Set("password123")
 	initialUser, err := userStore.CreateUser(initialUser)
