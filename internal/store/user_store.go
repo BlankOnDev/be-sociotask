@@ -47,6 +47,7 @@ type User struct {
 	Email         string         `json:"email"`
 	PasswordHash  password       `json:"-"`
 	Bio           string         `json:"bio"`
+	Fullname      sql.NullString `json:"fullname"`
 	WalletAddress sql.NullString `json:"wallet_address"`
 	XID           sql.NullString `json:"x_id"`
 	CreatedAt     time.Time      `json:"created_at"`
@@ -80,8 +81,8 @@ type UserStore interface {
 
 func (s *PostgresUserStore) CreateUser(user *User) (*User, error) {
 	query := `
-		INSERT INTO users (username, email, password_hash, bio)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO users (username, email, password_hash, bio, fullname)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, updated_at
 	`
 
@@ -91,6 +92,7 @@ func (s *PostgresUserStore) CreateUser(user *User) (*User, error) {
 		user.Email,
 		user.PasswordHash.hash,
 		user.Bio,
+		user.Fullname,
 	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -106,12 +108,13 @@ func (s *PostgresUserStore) UpdateUser(user *User) error {
 		username     = $1,
 		email        = $2,
 		bio          = $3,
+		fullname     = $4,
 		updated_at   = current_timestamp
-	WHERE id = $4
+	WHERE id = $5
 	RETURNING updated_at
 	`
 
-	result, err := s.db.Exec(query, user.Username, user.Email, user.Bio, user.ID)
+	result, err := s.db.Exec(query, user.Username, user.Email, user.Bio, user.Fullname, user.ID)
 	if err != nil {
 		return err
 	}
@@ -138,6 +141,7 @@ func (s *PostgresUserStore) GetUserByEmail(email string) (*User, error) {
 			email, 
 			password_hash, 
 			bio, 
+			fullname,
 			wallet_address,
 			created_at, 
 			updated_at
@@ -151,6 +155,7 @@ func (s *PostgresUserStore) GetUserByEmail(email string) (*User, error) {
 		&user.Email,
 		&user.PasswordHash.hash,
 		&user.Bio,
+		&user.Fullname,
 		&user.WalletAddress,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -177,6 +182,7 @@ func (s *PostgresUserStore) GetUserByID(id int64) (*User, error) {
 			email,
 			password_hash,
 			bio,
+			fullname,
 			wallet_address,
 			created_at,
 			updated_at
@@ -190,6 +196,7 @@ func (s *PostgresUserStore) GetUserByID(id int64) (*User, error) {
 		&user.Email,
 		&user.PasswordHash.hash,
 		&user.Bio,
+		&user.Fullname,
 		&user.WalletAddress,
 		&user.CreatedAt,
 		&user.UpdatedAt,

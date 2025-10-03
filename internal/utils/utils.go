@@ -13,17 +13,58 @@ import (
 )
 
 type Envelope map[string]any
+type Status string
+type Message string
 
-func WriteJSON(w http.ResponseWriter, status int, data Envelope) error {
+const (
+	StatusSuccess Status = "success"
+	StatusError   Status = "error"
+)
+const (
+	MessageLoginSuccess       Message = "login successful"
+	MessageLoginFailed        Message = "login failed"
+	MessageRegisterSuccess    Message = "registration successful"
+	MessageRegisterFailed     Message = "registration failed"
+	MessageTaskCreated        Message = "task created successfully"
+	MessageTaskRetrieved      Message = "task retrieved successfully"
+	MessageTasksFetched       Message = "tasks fetched successfully"
+	MessageInvalidRequest     Message = "invalid request"
+	MessageInternalError      Message = "internal server error"
+	MessageUnauthorized       Message = "unauthorized access"
+	MessageNotFound           Message = "resource not found"
+	MessageInvalidCredentials Message = "invalid credentials"
+	MessageTokenGenerated     Message = "token generated successfully"
+	MessageValidationFailed   Message = "validation failed"
+	MessageOAuthFailed        Message = "oauth authentication failed"
+	MessageOAuthSuccess       Message = "oauth authentication successful"
+)
 
-	js, err := json.MarshalIndent(data, "", " ")
+func WriteJSON(w http.ResponseWriter, status Status, message Message, statusCode int, data Envelope, errorsList []string) error {
+	var response Envelope
+
+	switch status {
+	case StatusSuccess:
+		response = Envelope{
+			"status":  status,
+			"message": message,
+			"data":    data,
+		}
+	case StatusError:
+		response = Envelope{
+			"status":  status,
+			"message": message,
+			"errors":  errorsList,
+		}
+	}
+
+	js, err := json.MarshalIndent(response, "", " ")
 	if err != nil {
 		return err
 	}
 
 	js = append(js, '\n')
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
+	w.WriteHeader(statusCode)
 	w.Write(js)
 	return nil
 }

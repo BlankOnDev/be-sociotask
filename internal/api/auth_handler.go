@@ -44,7 +44,8 @@ func (h *AuthHandler) HandleTwitterLogin(w http.ResponseWriter, r *http.Request)
 		Path:     "/",
 		Expires:  time.Now().Add(15 * time.Minute),
 		HttpOnly: true,
-		Secure:   r.TLS != nil,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	http.SetCookie(w, &http.Cookie{
@@ -53,7 +54,8 @@ func (h *AuthHandler) HandleTwitterLogin(w http.ResponseWriter, r *http.Request)
 		Path:     "/",
 		Expires:  time.Now().Add(15 * time.Minute),
 		HttpOnly: true,
-		Secure:   r.TLS != nil,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	url := h.oauthConf.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
@@ -64,33 +66,29 @@ func (h *AuthHandler) HandleTwitterCallback(w http.ResponseWriter, r *http.Reque
 	stateCookie, err := r.Cookie("oauth2_state")
 	if err != nil {
 		h.logger.Println("ERROR: invalid state parameter")
-		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "missing oauth2 state cookie"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageOAuthFailed, http.StatusBadRequest, nil, nil)
 		return
 	}
 	if r.URL.Query().Get("state") != stateCookie.Value {
 		h.logger.Println("ERROR: invalid state parameter")
-		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "invalid state parameter"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageOAuthFailed, http.StatusBadRequest, nil, nil)
 		return
 	}
 
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		h.logger.Println("ERROR: No authorization code received")
-		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "no authorization code received"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageOAuthFailed, http.StatusBadRequest, nil, nil)
 		return
 	}
-
-	h.logger.Printf("Received authorization code: %s", code[:10]+"...") // Log first 10 chars for debugging
 
 	// ambil verifier dari cookie
 	verifierCookie, err := r.Cookie("oauth2_verifier")
 	if err != nil {
 		h.logger.Println("ERROR: Missing oauth2_verifier cookie:", err)
-		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "missing oauth2 verifier cookie"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageOAuthFailed, http.StatusBadRequest, nil, nil)
 		return
 	}
-
-	h.logger.Printf("Using verifier: %s", verifierCookie.Value[:10]+"...") // Log first 10 chars
 
 	// exchange authorization code with access token
 	token, err := h.oauthConf.Exchange(
@@ -100,7 +98,7 @@ func (h *AuthHandler) HandleTwitterCallback(w http.ResponseWriter, r *http.Reque
 	)
 	if err != nil {
 		h.logger.Println("ERROR: Failed to exchange token:", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "failed to exchange token"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageOAuthFailed, http.StatusInternalServerError, nil, nil)
 		return
 	}
 
@@ -109,7 +107,7 @@ func (h *AuthHandler) HandleTwitterCallback(w http.ResponseWriter, r *http.Reque
 	response, err := client.Get("https://api.twitter.com/2/users/me?user.fields=id,name,username,profile_image_url")
 	if err != nil {
 		h.logger.Println("ERROR: Failed to get user from X:", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "failed to get user info"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageOAuthFailed, http.StatusInternalServerError, nil, nil)
 		return
 	}
 	defer response.Body.Close()
@@ -117,11 +115,9 @@ func (h *AuthHandler) HandleTwitterCallback(w http.ResponseWriter, r *http.Reque
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		h.logger.Println("ERROR: Failed to read response body:", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "failed to read user data"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageOAuthFailed, http.StatusInternalServerError, nil, nil)
 		return
 	}
-
-	h.logger.Printf("Twitter API response: %s", string(body))
 
 	var twitterUser struct {
 		Data struct {
@@ -138,19 +134,19 @@ func (h *AuthHandler) HandleTwitterCallback(w http.ResponseWriter, r *http.Reque
 
 	if err := json.Unmarshal(body, &twitterUser); err != nil {
 		h.logger.Println("ERROR: Failed to unmarshal twitter user data:", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "failed to process user data"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageOAuthFailed, http.StatusInternalServerError, nil, nil)
 		return
 	}
 
 	if len(twitterUser.Errors) > 0 {
 		h.logger.Printf("ERROR: Twitter API errors: %+v", twitterUser.Errors)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "failed to get user info from Twitter"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageOAuthFailed, http.StatusInternalServerError, nil, nil)
 		return
 	}
 
 	if twitterUser.Data.ID == "" {
 		h.logger.Println("ERROR: No user data received from Twitter")
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "no user data received"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageOAuthFailed, http.StatusInternalServerError, nil, nil)
 		return
 	}
 
@@ -161,11 +157,10 @@ func (h *AuthHandler) HandleTwitterCallback(w http.ResponseWriter, r *http.Reque
 	}
 
 	// check if user already exists
-	h.logger.Printf("Checking if user exists with email: %s", twitterUser.Data.Email)
 	user, err := h.userStore.GetUserByEmail(twitterUser.Data.Email)
 	if err != nil && err != sql.ErrNoRows {
 		h.logger.Println("ERROR: checking existing user:", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "database error"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, nil)
 		return
 	}
 
@@ -185,7 +180,7 @@ func (h *AuthHandler) HandleTwitterCallback(w http.ResponseWriter, r *http.Reque
 		err := newUser.PasswordHash.Set(randomPassword)
 		if err != nil {
 			h.logger.Println("ERROR: hashing password for new oauth user:", err)
-			utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "internal server error"})
+			utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, nil)
 			return
 		}
 
@@ -193,23 +188,22 @@ func (h *AuthHandler) HandleTwitterCallback(w http.ResponseWriter, r *http.Reque
 		if err != nil {
 			if strings.Contains(err.Error(), "unique constraint") {
 				h.logger.Printf("ERROR: unique constraint violation: %v", err)
-				utils.WriteJSON(w, http.StatusConflict, utils.Envelope{"error": "a user with this username or email already exists"})
+				utils.WriteJSON(w, utils.StatusError, utils.MessageRegisterFailed, http.StatusConflict, nil, nil)
 				return
 			}
 			h.logger.Printf("ERROR: creating new user: %v", err)
-			utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "failed to create user"})
+			utils.WriteJSON(w, utils.StatusError, utils.MessageRegisterFailed, http.StatusInternalServerError, nil, nil)
 			return
 		}
 		h.logger.Printf("Successfully created user with ID: %d", createdUser.ID)
 		user = createdUser
 	} else {
-		h.logger.Printf("Found existing user with ID: %d", user.ID)
 	}
 
 	// Ensure user is not nil before generating JWT
 	if user == nil {
 		h.logger.Println("ERROR: user is nil after OAuth process")
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "user creation failed"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageOAuthFailed, http.StatusInternalServerError, nil, nil)
 		return
 	}
 
@@ -217,9 +211,9 @@ func (h *AuthHandler) HandleTwitterCallback(w http.ResponseWriter, r *http.Reque
 	jwtToken, err := auth.GenerateJWTToken(user.ID, auth.RoleUser, "thisissecret")
 	if err != nil {
 		h.logger.Printf("ERROR: generating JWT token: %v", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "internal server error"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, nil)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"token": jwtToken, "user_id": user.ID})
+	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageOAuthSuccess, http.StatusOK, utils.Envelope{"token": jwtToken, "user_id": user.ID}, nil)
 }
