@@ -2,8 +2,8 @@ package api
 
 import (
 	"crypto/rand"
-	"encoding/base64"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -224,7 +224,7 @@ func (uh *UserHandler) CallbackAuthenticationGooogle(w http.ResponseWriter, r *h
 	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
 		uh.logger.Printf("error, failed get user info data : %v", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "failed to get user info"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageOAuthFailed, http.StatusInternalServerError, nil, []string{"failed to get user info"})
 		return
 	}
 	defer resp.Body.Close()
@@ -233,21 +233,21 @@ func (uh *UserHandler) CallbackAuthenticationGooogle(w http.ResponseWriter, r *h
 	var userInfo googleUserInfo
 	if err := json.Unmarshal(body, &userInfo); err != nil {
 		uh.logger.Printf("error, unmarshal data : %v", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "failed to parse user info"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageOAuthFailed, http.StatusInternalServerError, nil, []string{"failed to parse user info"})
 		return
 	}
 
 	user, err := uh.userStore.FindEmailForGoogle(userInfo.ID, userInfo.Email, userInfo.Name)
 	if err != nil {
 		uh.logger.Printf("error method FindEmailForGoogle, failed get find email : %v", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "database operation failed"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, []string{"database operation failed"})
 		return
 	}
 
 	jwtToken, err := auth.GenerateJWTToken(user.ID, auth.RoleUser, "thisissecret")
 	if err != nil {
 		uh.logger.Printf("ERROR: generating token: %v", err)
-		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "internal server error"})
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, []string{"failed to generate token"})
 		return
 	}
 	redirectURL := fmt.Sprintf("/success?token=%s", jwtToken)
