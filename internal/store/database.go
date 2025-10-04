@@ -58,6 +58,6 @@ func Migrate(db *sql.DB, dir string) error {
 }
 
 func (dc *DatabaseConfig) ConnectionString() string {
-	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", dc.Host, dc.User, dc.Password, dc.DBName, dc.Port)
-	// return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=require", dc.Host, dc.User, dc.Password, dc.DBName, dc.Port)
+	// return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", dc.Host, dc.User, dc.Password, dc.DBName, dc.Port)
+	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=require", dc.Host, dc.User, dc.Password, dc.DBName, dc.Port)
 }
