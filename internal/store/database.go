@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"io/fs"
-	"os"
 
+	"github.com/harundarat/be-socialtask/internal/utils"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 )
@@ -20,11 +20,11 @@ type DatabaseConfig struct {
 
 func Open() (*sql.DB, error) {
 	config := DatabaseConfig{
-		Host:     GetEnv("DB_HOST"),
-		User:     GetEnv("DB_USER"),
-		Password: GetEnv("DB_PASSWORD"),
-		DBName:   GetEnv("DB_NAME"),
-		Port:     GetEnv("DB_PORT"),
+		Host:     utils.GetEnv("DB_HOST"),
+		User:     utils.GetEnv("DB_USER"),
+		Password: utils.GetEnv("DB_PASSWORD"),
+		DBName:   utils.GetEnv("DB_NAME"),
+		Port:     utils.GetEnv("DB_PORT"),
 	}
 	connectionString := config.ConnectionString()
 
@@ -55,14 +55,6 @@ func Migrate(db *sql.DB, dir string) error {
 		return fmt.Errorf("goose up: %w", err)
 	}
 	return nil
-}
-
-func GetEnv(key string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		panic("add environment variable first!")
-	}
-	return value
 }
 
 func (dc *DatabaseConfig) ConnectionString() string {
