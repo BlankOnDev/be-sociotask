@@ -175,7 +175,7 @@ func (uh *UserHandler) HandleLoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := auth.GenerateJWTToken(user.ID, auth.RoleUser, "thisissecret")
+	token, err := auth.GenerateJWTToken(user.ID, auth.RoleUser, utils.GetEnv("JWT_SECRET"))
 	if err != nil {
 		uh.logger.Printf("ERROR: generating token: %v", err)
 		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, nil)
@@ -244,7 +244,7 @@ func (uh *UserHandler) CallbackAuthenticationGooogle(w http.ResponseWriter, r *h
 		return
 	}
 
-	jwtToken, err := auth.GenerateJWTToken(user.ID, auth.RoleUser, "thisissecret")
+	jwtToken, err := auth.GenerateJWTToken(user.ID, auth.RoleUser, utils.GetEnv("JWT_SECRET"))
 	if err != nil {
 		uh.logger.Printf("ERROR: generating token: %v", err)
 		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, []string{"failed to generate token"})

@@ -208,7 +208,7 @@ func (h *AuthHandler) HandleTwitterCallback(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Generate a JWT for the user
-	jwtToken, err := auth.GenerateJWTToken(user.ID, auth.RoleUser, "thisissecret")
+	jwtToken, err := auth.GenerateJWTToken(user.ID, auth.RoleUser, utils.GetEnv("JWT_SECRET"))
 	if err != nil {
 		h.logger.Printf("ERROR: generating JWT token: %v", err)
 		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, nil)
