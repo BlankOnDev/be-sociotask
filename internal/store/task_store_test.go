@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"fmt"
 	"testing"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -154,4 +155,106 @@ func TestGetTaskByID(t *testing.T) {
 			assert.Equal(t, tt.id, int64(task.ID))
 		})
 	}
+}
+
+func TestGetAllTask(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	taskStore := NewPostgresTaskStore(db)
+	userStore := NewPostgresUserStore(db)
+
+	user := &User{
+		Username: "test-get-all",
+		Email:    "test-get-all@gmail.com",
+		Bio:      "test get all",
+	}
+	user.PasswordHash.Set("password123")
+	createdUser, err := userStore.CreateUser(user)
+	require.NoError(t, err)
+
+	for i := 1; i <= 7; i++ {
+		_, err := taskStore.CreateTask(&Task{
+			Title:       fmt.Sprintf("Task-%d", i),
+			Description: "Test desc",
+			UserID:      createdUser.ID,
+			RewardUSDT:  float64(i),
+		})
+		require.NoError(t, err)
+	}
+	var page, limit int64
+	page, limit = 1, 5
+	offset := (page - 1) * limit
+
+	tasks, totalPage, err := taskStore.GetAllTask(limit, offset)
+	require.NoError(t, err)
+	assert.LessOrEqual(t, len(tasks), limit)
+	assert.GreaterOrEqual(t, totalPage, 1)
+}
+
+func TestUpdateTask(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	taskStore := NewPostgresTaskStore(db)
+	userStore := NewPostgresUserStore(db)
+
+	user := &User{
+		Username: "test-update",
+		Email:    "test-update@gmail.com",
+		Bio:      "test update",
+	}
+	user.PasswordHash.Set("password123")
+	createdUser, err := userStore.CreateUser(user)
+	require.NoError(t, err)
+
+	task, err := taskStore.CreateTask(&Task{
+		Title:       "Before Update",
+		Description: "desc",
+		UserID:      createdUser.ID,
+		RewardUSDT:  10,
+	})
+	require.NoError(t, err)
+
+	task.Title = "After Update"
+	task.Description = "Updated desc"
+	err = taskStore.EditTask(task)
+	require.NoError(t, err)
+
+	updated, err := taskStore.GetTaskByID(int64(task.ID))
+	require.NoError(t, err)
+	assert.Equal(t, "After Update", updated.Title)
+	assert.Equal(t, "Updated desc", updated.Description)
+}
+
+func TestDeleteTask(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	taskStore := NewPostgresTaskStore(db)
+	userStore := NewPostgresUserStore(db)
+
+	user := &User{
+		Username: "test-delete",
+		Email:    "test-delete@gmail.com",
+		Bio:      "test delete",
+	}
+	user.PasswordHash.Set("password123")
+	createdUser, err := userStore.CreateUser(user)
+	require.NoError(t, err)
+
+	task, err := taskStore.CreateTask(&Task{
+		Title:       "Delete Me",
+		Description: "desc",
+		UserID:      createdUser.ID,
+		RewardUSDT:  5,
+	})
+	require.NoError(t, err)
+
+	err = taskStore.DeleteTask(int64(task.ID))
+	require.NoError(t, err)
+
+	deleted, err := taskStore.GetTaskByID(int64(task.ID))
+	require.NoError(t, err)
+	assert.Nil(t, deleted)
 }

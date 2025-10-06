@@ -57,8 +57,8 @@ func NewApplication() (*Application, error) {
 
 	// handlers
 	taskHandler := api.NewTaskHandler(taskStore, logger)
-	userHandler := api.NewUserHandler(userStore, oauthConfGl, logger)
-	authHandler := api.NewAuthHandler(logger, userStore, oauthConf)
+	userHandler := api.NewUserHandler(userStore, logger)
+	authHandler := api.NewAuthHandler(logger, userStore, oauthConfGl, oauthConf)
 
 	// middleware
 	userMiddleware := middleware.NewUserMiddleware(userStore, "thisissecret")

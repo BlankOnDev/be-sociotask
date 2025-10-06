@@ -26,20 +26,32 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 		w.Write([]byte(pages.FailedPage))
 	})
 
-	r.Group(func(r chi.Router) {
-		r.Use(app.UserMiddleware.Authenticate)
-	})
+	// r.Group(func(r chi.Router) {
+	// 	r.Use(app.UserMiddleware.Authenticate)
+	// })
 
 	r.Get("/health", app.HealthCheck)
 	r.Get("/tasks/{id}", app.TaskHandler.HandleGetTaskByID)
 	r.Get("/users/{id}/tasks", app.UserHandler.HandleGetUserTasks)
 	r.Get("/login/twitter", app.AuthHandler.HandleTwitterLogin)
 	r.Get("/login/twitter/callback", app.AuthHandler.HandleTwitterCallback)
-	r.Post("/tasks", app.TaskHandler.HandleCreateTask)
 	r.Post("/users", app.UserHandler.HandleCreateUser)
 	r.Post("/login", app.UserHandler.HandleLoginUser)
-	r.Get("/google-login", app.UserHandler.LoginAuthenticationGooogle)
-	r.Get("/callback", app.UserHandler.CallbackAuthenticationGooogle)
+	r.Get("/login/google", app.AuthHandler.LoginAuthenticationGooogle)
+	r.Get("/login/google/callback", app.AuthHandler.CallbackAuthenticationGooogle)
+	r.Post("/login/google/android", app.AuthHandler.HandleGoogleLoginAndroid)
+
+	r.Group(func(r chi.Router) {
+		r.Use(app.UserMiddleware.Authenticate)
+		r.Use(func(next http.Handler) http.Handler {
+			return app.UserMiddleware.RequireUser(next.ServeHTTP)
+		})
+
+		r.Get("/tasks", app.TaskHandler.HandleGetAllTask)
+		r.Post("/tasks", app.TaskHandler.HandleCreateTask)
+		r.Put("/tasks/{id}", app.TaskHandler.HandleEditTask)
+		r.Delete("/tasks/{id}", app.TaskHandler.HandleDeleteTask)
+	})
 
 	return r
 }
