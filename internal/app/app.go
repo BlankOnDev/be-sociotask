@@ -11,6 +11,7 @@ import (
 	auth "github.com/harundarat/be-socialtask/internal/auth/google"
 	"github.com/harundarat/be-socialtask/internal/middleware"
 	"github.com/harundarat/be-socialtask/internal/store"
+	"github.com/harundarat/be-socialtask/internal/utils"
 	"github.com/harundarat/be-socialtask/migrations"
 	"golang.org/x/oauth2"
 )
@@ -39,9 +40,9 @@ func NewApplication() (*Application, error) {
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	oauthConf := &oauth2.Config{
-		ClientID:     store.GetEnv("TWITTER_CLIENT_ID"),
-		ClientSecret: store.GetEnv("TWITTER_CLIENT_SECRET"),
-		RedirectURL:  store.GetEnv("TWITTER_REDIRECT_URL"),
+		ClientID:     utils.GetEnv("TWITTER_CLIENT_ID"),
+		ClientSecret: utils.GetEnv("TWITTER_CLIENT_SECRET"),
+		RedirectURL:  utils.GetEnv("TWITTER_REDIRECT_URL"),
 		Scopes:       []string{"tweet.read", "users.read", "offline.access"},
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  "https://twitter.com/i/oauth2/authorize",
@@ -61,7 +62,7 @@ func NewApplication() (*Application, error) {
 	authHandler := api.NewAuthHandler(logger, userStore, oauthConfGl, oauthConf)
 
 	// middleware
-	userMiddleware := middleware.NewUserMiddleware(userStore, "thisissecret")
+	userMiddleware := middleware.NewUserMiddleware(userStore, utils.GetEnv("JWT_SECRET"))
 
 	app := &Application{
 		Logger:         logger,

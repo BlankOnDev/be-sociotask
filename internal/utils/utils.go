@@ -7,6 +7,7 @@ import (
 	"errors"
 	"math/big"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -116,4 +117,12 @@ func GenerateSecureRandomString(length int) (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(bytes), nil
+}
+
+func GetEnv(key string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		panic("add environment variable first!")
+	}
+	return value
 }
