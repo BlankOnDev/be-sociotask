@@ -36,7 +36,7 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 	r.Get("/login/twitter", app.AuthHandler.HandleTwitterLogin)
 	r.Get("/login/twitter/callback", app.AuthHandler.HandleTwitterCallback)
 	r.Post("/tasks", app.TaskHandler.HandleCreateTask)
-	r.Post("/users", app.UserHandler.HandleCreateUser)
+	r.Post("/register", app.UserHandler.HandleCreateUser)
 	r.Post("/login", app.UserHandler.HandleLoginUser)
 	r.Get("/google-login", app.UserHandler.LoginAuthenticationGooogle)
 	r.Get("/callback", app.UserHandler.CallbackAuthenticationGooogle)
