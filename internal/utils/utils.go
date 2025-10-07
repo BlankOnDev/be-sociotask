@@ -84,6 +84,17 @@ func ReadIDParam(r *http.Request) (int64, error) {
 	return id, nil
 }
 
+func ReadPageParam(r *http.Request) int64 {
+	pageParam := chi.URLParam(r, "page")
+	if pageParam == "" {
+		return 1
+	}
+
+	page, _ := strconv.ParseInt(pageParam, 10, 64)
+
+	return page
+}
+
 // GenerateRandomString creates a cryptographically secure random string of a given length.
 func GenerateRandomString(n int) string {
 	const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"

@@ -36,6 +36,7 @@ Thumbs.db
 *.log
 *.tmp
 tmp/
+mentahan/
 
 # Misc
 node_modules/

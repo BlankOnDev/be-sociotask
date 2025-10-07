@@ -12,7 +12,7 @@ const IndexPage = `
 			Login with the following,
 		</p>
 		<ul>
-			<li><a href="/google-login">Google</a></li>
+			<li><a href="/login/google">Google</a></li>
 		</ul>
 	</body>
 </html>

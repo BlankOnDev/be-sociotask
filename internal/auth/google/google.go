@@ -1,9 +1,13 @@
 package auth
 
 import (
-	"github.com/harundarat/be-socialtask/internal/utils"
+	"context"
+	"log"
+
+	"github.com/harundarat/be-socialtask/internal/store"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/idtoken"
 )
 
 func NewGoogleAuth() *oauth2.Config {
@@ -16,4 +20,15 @@ func NewGoogleAuth() *oauth2.Config {
 	}
 
 	return oauthConfGl
+}
+
+func GoogleVerifytokenID(tokenID string) (*idtoken.Payload, error) {
+	// maaf kode ini jelek, kapan-kapan ku oplas ini.
+	idinfo, err := idtoken.Validate(context.Background(), tokenID, store.GetEnv("Google_Client_ID_Web"))
+	if err != nil {
+		log.Printf(`error saat memverifikasi tokenID: %v`, err)
+		return nil, err
+	}
+
+	return idinfo, nil
 }
