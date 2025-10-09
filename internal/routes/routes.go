@@ -35,7 +35,6 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 	r.Get("/users/{id}/tasks", app.UserHandler.HandleGetUserTasks)
 	r.Get("/login/twitter", app.AuthHandler.HandleTwitterLogin)
 	r.Get("/login/twitter/callback", app.AuthHandler.HandleTwitterCallback)
-	r.Post("/tasks", app.TaskHandler.HandleCreateTask)
 	r.Post("/register", app.UserHandler.HandleCreateUser)
 	r.Post("/login", app.UserHandler.HandleLoginUser)
 	r.Get("/login/google", app.AuthHandler.LoginAuthenticationGooogle)
@@ -48,10 +47,26 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 			return app.UserMiddleware.RequireUser(next.ServeHTTP)
 		})
 
+		// task
 		r.Get("/tasks", app.TaskHandler.HandleGetAllTask)
+		r.Get("/tasks/{id}", app.TaskHandler.HandleGetTaskByID)
 		r.Post("/tasks", app.TaskHandler.HandleCreateTask)
 		r.Put("/tasks/{id}", app.TaskHandler.HandleEditTask)
 		r.Delete("/tasks/{id}", app.TaskHandler.HandleDeleteTask)
+
+		// action
+		r.Get("/task/action", app.ActionHandler.HandleGetAllAction)
+		r.Get("/task/action/{id}", app.ActionHandler.HandleGetActionByID)
+		r.Post("/task/action", app.ActionHandler.HandleCreateAction)
+		r.Put("/task/action/{id}", app.ActionHandler.HandleEditAction)
+		r.Delete("/task/action/{id}", app.ActionHandler.HandleDeleteAction)
+
+		// reward
+		r.Get("/task/reward", app.RewardHandler.HandleGetAllReward)
+		r.Get("/task/reward/{id}", app.RewardHandler.HandleGetRewardByID)
+		r.Post("/task/reward", app.RewardHandler.HandleCreateReward)
+		r.Put("/task/reward/{id}", app.RewardHandler.HandleEditReward)
+		r.Delete("/task/reward/{id}", app.RewardHandler.HandleDeleteReward)
 	})
 
 	return r

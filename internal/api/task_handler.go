@@ -23,6 +23,11 @@ func NewTaskHandler(taskStore store.TaskStore, logger *log.Logger) *TaskHandler 
 }
 
 func (th *TaskHandler) HandleCreateTask(w http.ResponseWriter, r *http.Request) {
+	users, ok := middleware.GetUser(r)
+	if !ok {
+		utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, nil, nil)
+		return
+	}
 	var task store.Task
 
 	err := json.NewDecoder(r.Body).Decode(&task)
@@ -32,9 +37,7 @@ func (th *TaskHandler) HandleCreateTask(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	users := middleware.GetUser(r)
 	task.UserID = users.ID
-
 	createdTask, err := th.taskStore.CreateTask(&task)
 	if err != nil {
 		th.logger.Printf("ERROR: createTask: %v", err)
@@ -68,7 +71,6 @@ func (th *TaskHandler) HandleGetAllTask(w http.ResponseWriter, r *http.Request) 
 	var (
 		limit int64 = 10
 	)
-
 	page := utils.ReadPageParam(r)
 	offset := (page - 1) * limit
 	tasks, totalPages, err := th.taskStore.GetAllTask(limit, offset)
@@ -89,8 +91,6 @@ func (th *TaskHandler) HandleGetAllTask(w http.ResponseWriter, r *http.Request) 
 }
 
 func (th *TaskHandler) HandleEditTask(w http.ResponseWriter, r *http.Request) {
-	_ = middleware.GetUser(r)
-
 	id, err := utils.ReadIDParam(r)
 	if err != nil {
 		th.logger.Printf("ERROR: readIdParam: %v", err)
@@ -99,13 +99,11 @@ func (th *TaskHandler) HandleEditTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var task store.Task
-	// task.UserID = users.ID // bisa, if userID != task_userID
-
 	task.ID = int(id)
 
 	err = json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
-		th.logger.Printf("ERROR: decodingCreateTask: %v", err)
+		th.logger.Printf("ERROR: decodingEditTask: %v", err)
 		utils.WriteJSON(w, utils.StatusError, utils.MessageInvalidRequest, http.StatusBadRequest, nil, nil)
 		return
 	}
@@ -117,11 +115,10 @@ func (th *TaskHandler) HandleEditTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageTaskRetrieved, http.StatusOK, nil, nil)
+	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageTasksUpdated, http.StatusOK, nil, nil)
 }
 
 func (th *TaskHandler) HandleDeleteTask(w http.ResponseWriter, r *http.Request) {
-	_ = middleware.GetUser(r)
 	id, err := utils.ReadIDParam(r)
 	if err != nil {
 		th.logger.Printf("ERROR: readIdParam: %v", err)
@@ -136,5 +133,5 @@ func (th *TaskHandler) HandleDeleteTask(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageTaskRetrieved, http.StatusOK, nil, nil)
+	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageTasksDeleted, http.StatusOK, nil, nil)
 }
