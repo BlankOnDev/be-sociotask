@@ -32,12 +32,13 @@ func SetUser(r *http.Request, user *store.User) *http.Request {
 	return r.WithContext(ctx)
 }
 
-func GetUser(r *http.Request) *store.User {
+func GetUser(r *http.Request) (*store.User, bool) {
 	user, ok := r.Context().Value(UserContextKey).(*store.User)
 	if !ok {
-		panic("missing user in request") // bad actor call
+		// panic("missing user in request") // bad actor call
+		return nil, false
 	}
-	return user
+	return user, true
 }
 
 func (um *UserMiddleware) Authenticate(next http.Handler) http.Handler {
@@ -60,7 +61,7 @@ func (um *UserMiddleware) Authenticate(next http.Handler) http.Handler {
 		token := headerParts[1]
 		claims, err := auth.ParseJWTToken(token, um.jwtSecret)
 		if err != nil {
-			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, nil, nil)
+			utils.WriteJSON(w, utils.StatusError, "utils.MessageUnauthorized", http.StatusUnauthorized, nil, nil)
 			return
 		}
 
@@ -87,8 +88,8 @@ func (um *UserMiddleware) Authenticate(next http.Handler) http.Handler {
 
 func (um *UserMiddleware) RequireUser(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user := GetUser(r)
-		if user.IsAnonymous() {
+		user, ok := GetUser(r)
+		if !ok || user.IsAnonymous() {
 			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, nil, nil)
 			return
 		}

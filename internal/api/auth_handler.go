@@ -268,7 +268,7 @@ func (h *AuthHandler) CallbackAuthenticationGooogle(w http.ResponseWriter, r *ht
 		return
 	}
 
-	jwtToken, err := auth.GenerateJWTToken(user.ID, auth.RoleUser, "thisissecret")
+	jwtToken, err := auth.GenerateJWTToken(user.ID, auth.RoleUser, utils.GetEnv("JWT_SECRET"))
 	if err != nil {
 		h.logger.Printf("ERROR: generating token: %v", err)
 		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, []string{"failed to generate token"})
@@ -324,7 +324,7 @@ func (h *AuthHandler) HandleGoogleLoginAndroid(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	jwtToken, err := auth.GenerateJWTToken(user.ID, auth.RoleUser, "thisissecret")
+	jwtToken, err := auth.GenerateJWTToken(user.ID, auth.RoleUser, utils.GetEnv("JWT_SECRET"))
 	if err != nil {
 		h.logger.Printf("ERROR: generating token: %v", err)
 		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, nil, []string{"failed to generate token"})
