@@ -40,6 +40,10 @@ type TaskStore interface {
 }
 
 func (pg *PostgresTaskStore) CreateTask(task *Task) (*Task, error) {
+	if task.UserID == 0 {
+		return nil, errors.New("user id is required and can not be zero")
+	}
+
 	tx, err := pg.db.Begin()
 	if err != nil {
 		return nil, err
@@ -65,9 +69,6 @@ func (pg *PostgresTaskStore) CreateTask(task *Task) (*Task, error) {
 `
 
 	err = tx.QueryRow(query, task.Title, task.Description, task.UserID, task.RewardID, task.RewardUSDT, task.DueDate, task.MaxParticipant, task.TaskImage, task.ActionID).Scan(&task.ID)
-	if task.UserID == 0 {
-		return nil, errors.New("user id is required and can not be zero")
-	}
 	if err != nil {
 		return nil, err
 	}
