@@ -23,6 +23,7 @@ type Application struct {
 	AuthHandler    *api.AuthHandler
 	ActionHandler  *api.ActionHandler
 	RewardHandler  *api.RewardHandler
+	RewardsHandler *api.RewardsHandler
 	UserMiddleware *middleware.UserMiddleware
 	DB             *sql.DB
 	GoogleApp      *oauth2.Config
@@ -59,6 +60,7 @@ func NewApplication() (*Application, error) {
 	userStore := store.NewPostgresUserStore(pgDB)
 	taskActionStore := store.NewPostgresTaskActionStore(pgDB)
 	taskRewardStore := store.NewPostgresTaskRewardStore(pgDB)
+	rewardsStore := store.NewPostgresRewardsStore(pgDB)
 
 	// handlers
 	taskHandler := api.NewTaskHandler(taskStore, logger)
@@ -66,6 +68,7 @@ func NewApplication() (*Application, error) {
 	authHandler := api.NewAuthHandler(logger, userStore, oauthConfGl, oauthConf)
 	taskActionHandler := api.NewActionHandler(taskActionStore, logger)
 	taskRewardHandler := api.NewRewardHandler(taskRewardStore, logger)
+	rewardsHandler := api.NewRewardsHandler(rewardsStore, logger)
 	// middleware
 	userMiddleware := middleware.NewUserMiddleware(userStore, utils.GetEnv("JWT_SECRET"))
 	app := &Application{
@@ -76,6 +79,7 @@ func NewApplication() (*Application, error) {
 		UserMiddleware: userMiddleware,
 		ActionHandler:  taskActionHandler,
 		RewardHandler:  taskRewardHandler,
+		RewardsHandler: rewardsHandler,
 		DB:             pgDB,
 		GoogleApp:      oauthConfGl,
 	}
