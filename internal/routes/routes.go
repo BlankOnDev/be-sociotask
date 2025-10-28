@@ -67,6 +67,9 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 		r.Post("/task/reward", app.RewardHandler.HandleCreateReward)
 		r.Put("/task/reward/{id}", app.RewardHandler.HandleEditReward)
 		r.Delete("/task/reward/{id}", app.RewardHandler.HandleDeleteReward)
+
+		// rewards
+		r.Post("/rewards", app.RewardsHandler.HandleCreateReward)
 	})
 
 	return r
