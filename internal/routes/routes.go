@@ -52,6 +52,14 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 	r.Get("/login/google/callback", app.AuthHandler.CallbackAuthenticationGooogle)
 	r.Post("/login/google/android", app.AuthHandler.HandleGoogleLoginAndroid)
 
+	// task actions
+	r.Get("/actions", app.ActionHandler.HandleGetAllAction)
+	r.Get("/actions/{id}", app.ActionHandler.HandleGetActionByID)
+
+	// task rewards
+	r.Get("/reward", app.RewardHandler.HandleGetAllReward)
+	r.Get("/reward/{id}", app.RewardHandler.HandleGetRewardByID)
+
 	r.Group(func(r chi.Router) {
 		r.Use(app.UserMiddleware.Authenticate)
 		r.Use(func(next http.Handler) http.Handler {
@@ -63,19 +71,15 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 		r.Put("/tasks/{id}", app.TaskHandler.HandleEditTask)
 		r.Delete("/tasks/{id}", app.TaskHandler.HandleDeleteTask)
 
-		// action
-		r.Get("/task/action", app.ActionHandler.HandleGetAllAction)
-		r.Get("/task/action/{id}", app.ActionHandler.HandleGetActionByID)
-		r.Post("/task/action", app.ActionHandler.HandleCreateAction)
-		r.Put("/task/action/{id}", app.ActionHandler.HandleEditAction)
-		r.Delete("/task/action/{id}", app.ActionHandler.HandleDeleteAction)
+		// // action
+		// r.Post("/actions", app.ActionHandler.HandleCreateAction)
+		// r.Put("/actions/{id}", app.ActionHandler.HandleEditAction)
+		// r.Delete("/actions/{id}", app.ActionHandler.HandleDeleteAction)
 
-		// reward
-		r.Get("/task/reward", app.RewardHandler.HandleGetAllReward)
-		r.Get("/task/reward/{id}", app.RewardHandler.HandleGetRewardByID)
-		r.Post("/task/reward", app.RewardHandler.HandleCreateReward)
-		r.Put("/task/reward/{id}", app.RewardHandler.HandleEditReward)
-		r.Delete("/task/reward/{id}", app.RewardHandler.HandleDeleteReward)
+		// // reward
+		// r.Post("/reward", app.RewardHandler.HandleCreateReward)
+		// r.Put("/reward/{id}", app.RewardHandler.HandleEditReward)
+		// r.Delete("/reward/{id}", app.RewardHandler.HandleDeleteReward)
 
 		// rewards
 		r.Post("/rewards", app.RewardsHandler.HandleCreateReward)
