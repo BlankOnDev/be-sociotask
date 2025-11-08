@@ -41,6 +41,7 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 	// })
 
 	r.Get("/health", app.HealthCheck)
+	r.Get("/tasks", app.TaskHandler.HandleGetAllTask)
 	r.Get("/tasks/{id}", app.TaskHandler.HandleGetTaskByID)
 	r.Get("/users/{id}/tasks", app.UserHandler.HandleGetUserTasks)
 	r.Get("/login/twitter", app.AuthHandler.HandleTwitterLogin)
@@ -58,8 +59,6 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 		})
 
 		// task
-		r.Get("/tasks", app.TaskHandler.HandleGetAllTask)
-		r.Get("/tasks/{id}", app.TaskHandler.HandleGetTaskByID)
 		r.Post("/tasks", app.TaskHandler.HandleCreateTask)
 		r.Put("/tasks/{id}", app.TaskHandler.HandleEditTask)
 		r.Delete("/tasks/{id}", app.TaskHandler.HandleDeleteTask)
