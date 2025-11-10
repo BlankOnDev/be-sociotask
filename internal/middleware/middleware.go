@@ -35,8 +35,7 @@ func SetUser(r *http.Request, user *store.User) *http.Request {
 func GetUser(r *http.Request) (*store.User, bool) {
 	user, ok := r.Context().Value(UserContextKey).(*store.User)
 	if !ok {
-		// panic("missing user in request") // bad actor call
-		return nil, false
+		panic("missing user in request") // bad actor call
 	}
 	return user, true
 }
@@ -54,30 +53,30 @@ func (um *UserMiddleware) Authenticate(next http.Handler) http.Handler {
 
 		headerParts := strings.Split(authHeader, " ")
 		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, nil, nil)
+			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, utils.Envelope{"error": "invalid credentials"}, nil)
 			return
 		}
 
 		token := headerParts[1]
 		claims, err := auth.ParseJWTToken(token, um.jwtSecret)
 		if err != nil {
-			utils.WriteJSON(w, utils.StatusError, "utils.MessageUnauthorized", http.StatusUnauthorized, nil, nil)
+			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, utils.Envelope{"error": "invalid credentials"}, nil)
 			return
 		}
 
 		userID, err := strconv.Atoi(claims.Subject)
 		if err != nil {
-			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, nil, nil)
+			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, utils.Envelope{"error": "invalid credentials"}, nil)
 			return
 		}
 
 		user, err := um.userStore.GetUserByID(int64(userID))
 		if err != nil {
-			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, nil, nil)
+			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, utils.Envelope{"error": "invalid credentials"}, nil)
 			return
 		}
 		if user == nil {
-			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, nil, nil)
+			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, utils.Envelope{"error": "invalid credentials"}, nil)
 			return
 		}
 
@@ -90,7 +89,7 @@ func (um *UserMiddleware) RequireUser(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, ok := GetUser(r)
 		if !ok || user.IsAnonymous() {
-			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, nil, nil)
+			utils.WriteJSON(w, utils.StatusError, utils.MessageUnauthorized, http.StatusUnauthorized, utils.Envelope{"error": "invalid credentials"}, nil)
 			return
 		}
 

@@ -51,6 +51,8 @@ const (
 	MessageValidationFailed   Message = "validation failed"
 	MessageOAuthFailed        Message = "oauth authentication failed"
 	MessageOAuthSuccess       Message = "oauth authentication successful"
+	MessageBadRequest         Message = "bad request"
+	MessageUserRetrieved      Message = "user retrieved successfully"
 )
 
 func WriteJSON(w http.ResponseWriter, status Status, message Message, statusCode int, data Envelope, errorsList []string) error {

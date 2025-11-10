@@ -9,6 +9,7 @@ import (
 	"regexp"
 
 	"github.com/harundarat/be-socialtask/internal/auth"
+	"github.com/harundarat/be-socialtask/internal/middleware"
 	"github.com/harundarat/be-socialtask/internal/store"
 	"github.com/harundarat/be-socialtask/internal/utils"
 )
@@ -128,6 +129,24 @@ func (uh *UserHandler) HandleCreateUser(w http.ResponseWriter, r *http.Request) 
 	}
 
 	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageRegisterSuccess, http.StatusCreated, utils.Envelope{"user_id": user.ID}, nil)
+}
+
+func (uh *UserHandler) HandleGetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := middleware.GetUser(r)
+	if !ok {
+		uh.logger.Printf("ERROR: getting current user")
+		utils.WriteJSON(w, utils.StatusError, utils.MessageBadRequest, http.StatusBadRequest, utils.Envelope{"error": "invalid credentials"}, nil)
+		return
+	}
+
+	user, err := uh.userStore.GetUserByID(currentUser.ID)
+	if err != nil {
+		uh.logger.Printf("ERROR: getting user by id: %v", err)
+		utils.WriteJSON(w, utils.StatusError, utils.MessageInternalError, http.StatusInternalServerError, utils.Envelope{"error": "intetrnal server error"}, nil)
+		return
+	}
+
+	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageUserRetrieved, http.StatusOK, utils.Envelope{"user": user}, nil)
 }
 
 func (uh *UserHandler) HandleLoginUser(w http.ResponseWriter, r *http.Request) {
