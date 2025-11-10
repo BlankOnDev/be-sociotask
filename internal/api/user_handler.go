@@ -131,7 +131,7 @@ func (uh *UserHandler) HandleCreateUser(w http.ResponseWriter, r *http.Request) 
 	utils.WriteJSON(w, utils.StatusSuccess, utils.MessageRegisterSuccess, http.StatusCreated, utils.Envelope{"user_id": user.ID}, nil)
 }
 
-func (uh *UserHandler) HandleGetUserByID(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) HandleGetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := middleware.GetUser(r)
 	if !ok {
 		uh.logger.Printf("ERROR: getting current user")

@@ -67,7 +67,7 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 		})
 
 		// user
-		r.Get("/users/current", app.UserMiddleware.RequireUser(app.UserHandler.HandleGetUserByID))
+		r.Get("/users/current", app.UserMiddleware.RequireUser(app.UserHandler.HandleGetCurrentUser))
 
 		// task
 		r.Post("/tasks", app.TaskHandler.HandleCreateTask)
