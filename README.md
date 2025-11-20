@@ -20,9 +20,6 @@ A robust RESTful API backend for a task marketplace platform where users can pos
 - [API Documentation](#api-documentation)
 - [Testing](#testing)
 - [Deployment](#deployment)
-- [Project Highlights](#project-highlights)
-- [Learning Outcomes](#learning-outcomes)
-- [Contributing](#contributing)
 - [License](#license)
 
 ## 🎯 Overview
@@ -482,93 +479,6 @@ docker build -t sociotask-backend .
 docker run -p 8080:8080 --env-file .env sociotask-backend
 ```
 
-## 🌟 Project Highlights
-
-### Technical Achievements
-
-1. **Scalable Architecture**
-   - Clean separation of concerns (handlers, store, middleware)
-   - Repository pattern for data access
-   - Middleware-based authentication
-
-2. **Modern OAuth Integration**
-   - Multiple OAuth providers (Google, Twitter)
-   - Platform-specific implementations (Web, Android)
-   - Secure token management
-
-3. **Database Design**
-   - Normalized schema with proper relationships
-   - Cascade delete for data integrity
-   - Migration-based schema management
-
-4. **Security Best Practices**
-   - JWT-based authentication
-   - Password hashing with bcrypt
-   - Protected API endpoints
-   - SQL injection prevention through parameterized queries
-
-5. **Developer Experience**
-   - Comprehensive API documentation
-   - Docker-based development environment
-   - Automated testing
-   - Clean code organization
-
-## 📖 Learning Outcomes
-
-Through this project, I gained experience in:
-
-### Backend Development
-- Building RESTful APIs with Go
-- Implementing authentication systems (JWT, OAuth 2.0)
-- Database design and migration management
-- Writing clean, maintainable Go code
-
-### Database Management
-- PostgreSQL database design
-- Writing efficient SQL queries
-- Managing database migrations with Goose
-- Implementing proper relationships and constraints
-
-### Security
-- Implementing secure authentication flows
-- Password hashing and validation
-- JWT token generation and validation
-- OAuth 2.0 integration with multiple providers
-
-### Testing
-- Writing unit tests in Go
-- Test-driven development practices
-- Database testing strategies
-- Using testing frameworks (Testify)
-
-### DevOps
-- Docker containerization
-- Environment variable management
-- CI/CD considerations
-- Production deployment strategies
-
-### Software Architecture
-- Clean architecture principles
-- Separation of concerns
-- Repository pattern
-- Middleware pattern
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Coding Standards
-- Follow Go best practices and conventions
-- Write tests for new features
-- Update documentation as needed
-- Keep commits atomic and descriptive
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -578,13 +488,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Harun Darat**
 
 - GitHub: [@BlankOnDev](https://github.com/BlankOnDev)
-
-## 🙏 Acknowledgments
-
-- Chi Router for the excellent HTTP routing library
-- PostgreSQL community for the robust database
-- Go community for the amazing ecosystem
-
----
-
-**Note**: This project was developed as part of my portfolio to demonstrate backend development skills and is suitable for internship applications. It showcases real-world application development practices including authentication, database management, API design, and testing.
